@@ -220,6 +220,10 @@
 				};
 			});
 
+			// Select a tab
+			this.selected = this.tabs[ panels.first().data('customizeTab') ];
+			this.selected.both.addClass('library-selected');
+
 			// Bind tab switch events
 			this.library.children('ul').on( 'click', 'li', function( event ) {
 				var id  = $(this).data('customizeTab'),
@@ -250,18 +254,6 @@
 				if ( ! this.tabs.uploaded.panel.find('.thumbnail').length )
 					this.tabs.uploaded.both.addClass('hidden');
 			}
-
-			// Select a tab
-			panels.each( function() {
-				var tab = control.tabs[ $(this).data('customizeTab') ];
-
-				// Select the first visible tab.
-				if ( ! tab.link.hasClass('hidden') ) {
-					control.selected = tab;
-					tab.both.addClass('library-selected');
-					return false;
-				}
-			});
 
 			this.dropdownInit();
 		},
@@ -302,8 +294,7 @@
 			// This is the promise object.
 			deferred.promise( this );
 
-			this.container = params.container;
-			this.signature = params.signature;
+			this.previewer = params.previewer;
 
 			$.extend( params, { channel: api.PreviewFrame.uuid() });
 
@@ -347,7 +338,7 @@
 
 			this.request.done( function( response ) {
 				var location = self.request.getResponseHeader('Location'),
-					signature = self.signature,
+					signature = 'WP_CUSTOMIZER_SIGNATURE',
 					index;
 
 				// Check if the location response header differs from the current URL.
@@ -380,7 +371,7 @@
 				response = response.slice( 0, index ) + response.slice( index + signature.length );
 
 				// Create the iframe and inject the html content.
-				self.iframe = $('<iframe />').appendTo( self.container );
+				self.iframe = $('<iframe />').appendTo( self.previewer.container );
 
 				// Bind load event after the iframe has been added to the page;
 				// otherwise it will fire when injected into the DOM.
@@ -425,7 +416,7 @@
 					reject();
 
 				iframe = $('<iframe src="' + self.previewUrl() + '" />').hide();
-				iframe.appendTo( self.container );
+				iframe.appendTo( self.previewer.container );
 				iframe.load( function() {
 					self.triedLogin = true;
 
@@ -506,7 +497,6 @@
 
 			this.container   = api.ensure( params.container );
 			this.allowedUrls = params.allowedUrls;
-			this.signature   = params.signature;
 
 			params.url = window.location.href;
 
@@ -580,8 +570,7 @@
 				url:        this.url(),
 				previewUrl: this.previewUrl(),
 				query:      this.query() || {},
-				container:  this.container,
-				signature:  this.signature
+				previewer:  this
 			});
 
 			this.loading.done( function() {
@@ -594,8 +583,6 @@
 
 					self.targetWindow( this.targetWindow() );
 					self.channel( this.channel() );
-
-					self.send( 'active' );
 				});
 
 				this.send( 'sync', {
@@ -696,26 +683,23 @@
 			container:   '#customize-preview',
 			form:        '#customize-controls',
 			previewUrl:  api.settings.url.preview,
-			allowedUrls: api.settings.url.allowed,
-			signature:   'WP_CUSTOMIZER_SIGNATURE'
+			allowedUrls: api.settings.url.allowed
 		}, {
-
-			nonce: api.settings.nonce,
-
 			query: function() {
 				return {
 					wp_customize: 'on',
 					theme:        api.settings.theme.stylesheet,
-					customized:   JSON.stringify( api.get() ),
-					nonce:        this.nonce.preview
+					customized:   JSON.stringify( api.get() )
 				};
 			},
+
+			nonce: $('#_wpnonce').val(),
 
 			save: function() {
 				var self  = this,
 					query = $.extend( this.query(), {
 						action: 'customize_save',
-						nonce:  this.nonce.save
+						nonce:  this.nonce
 					}),
 					request = $.post( api.settings.url.ajax, query );
 
@@ -748,11 +732,6 @@
 				});
 			}
 		});
-
-		// Refresh the nonces if the preview sends updated nonces over.
- 		previewer.bind( 'nonce', function( nonce ) {
- 			$.extend( this.nonce, nonce );
- 		});
 
 		$.each( api.settings.settings, function( id, data ) {
 			api.create( id, id, data.value, {

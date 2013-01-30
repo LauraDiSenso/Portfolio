@@ -54,6 +54,8 @@
   });
 </script>
 
+<script src=http://ba-dev36.corp.millennialmedia.com:9007/getAd.js.php?apid=357></script>
+
 <?php echo stripslashes(get_option($shortname."_tracking_code"));  ?>
 
 </body>

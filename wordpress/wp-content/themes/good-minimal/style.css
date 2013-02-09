@@ -101,7 +101,7 @@ a img.aligncenter {
 
 /* Categorized portfolio style */
 #filters{ padding:0; margin:0 0 20px 0px;}
-#filters li{ list-style:none; display:inline; padding:0 0px 0 0; color:#888; font-size: 12px; line-height:21px; text-transform:normal; }
+#filters li{ list-style:none; display:inline; padding:0 0px 0 0; color:#888; font-size: 16px; line-height:21px; text-transform:normal; }
 #filters li a{ padding:0 5px; text-decoration:none; color:#888; }
 #filters li a.selected{ color:#000; text-decoration:none;}
 
